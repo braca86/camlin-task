@@ -9,16 +9,25 @@ import { useTheme } from './composables/useTheme'
 const store = useTransformerStore()
 const { isDark, toggleTheme } = useTheme()
 
+/**
+ * Handles storage events from other browser tabs
+ * When another tab modifies the transformer dashboard state,
+ * this handler syncs the current tab's state to match
+ *
+ * @param event - StorageEvent containing the modified key
+ */
 const onStorage = (event: StorageEvent) => {
   if (event.key === 'transformer-dashboard-state') {
     store.hydrateFromStorage()
   }
 }
 
+// Set up cross-tab synchronization on mount
 onMounted(() => {
   window.addEventListener('storage', onStorage)
 })
 
+// Clean up event listener on unmount
 onBeforeUnmount(() => {
   window.removeEventListener('storage', onStorage)
 })
@@ -43,7 +52,6 @@ onBeforeUnmount(() => {
           :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
         />
       </header>
-
       <main>
         <div class="grid">
           <div class="col-12 lg:col-5">

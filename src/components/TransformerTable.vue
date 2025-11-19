@@ -10,43 +10,113 @@ import InputIcon from 'primevue/inputicon'
 import InputText from 'primevue/inputtext'
 import Badge from 'primevue/badge'
 import { useTransformerStore } from '../stores/transformerStore'
-import type { Transformer, TransformerHealth } from '../types'
+import { TransformerHealth } from '../types'
+import type { Transformer } from '../types'
 
 const store = useTransformerStore()
 
+/**
+ * Two-way computed property for the search input
+ * Binds to store and triggers filtering on change
+ */
 const search = computed({
   get: () => store.tableSearch,
   set: (value: string) => store.setTableSearch(value),
 })
 
+/**
+ * Two-way computed property for the health filter dropdown
+ * Null value means "show all"
+ */
 const healthFilter = computed<TransformerHealth | null>({
   get: () => store.healthFilter,
   set: (value) => store.setHealthFilter(value),
 })
 
+/**
+ * Options for the health filter dropdown
+ * Includes "All" option (null value) plus all health states
+ */
 const healthOptions = computed(() => [
   { label: 'All health states', value: null },
-  { label: 'Excellent', value: 'Excellent' as TransformerHealth },
-  { label: 'Good', value: 'Good' as TransformerHealth },
-  { label: 'Fair', value: 'Fair' as TransformerHealth },
-  { label: 'Poor', value: 'Poor' as TransformerHealth },
-  { label: 'Critical', value: 'Critical' as TransformerHealth },
+  { label: 'Excellent', value: TransformerHealth.Excellent },
+  { label: 'Good', value: TransformerHealth.Good },
+  { label: 'Fair', value: TransformerHealth.Fair },
+  { label: 'Poor', value: TransformerHealth.Poor },
+  { label: 'Critical', value: TransformerHealth.Critical },
 ])
 
+/**
+ * Filtered transformer list from store
+ * Already filtered by search query and health status
+ */
 const transformers = computed(() => store.filteredTransformers)
 
+// ==================== Select All Logic ====================
+
+/**
+ * True if all currently visible transformers are selected
+ * Used to show checked state in the header checkbox
+ */
+const allVisibleSelected = computed(() => {
+  if (transformers.value.length === 0) return false
+  return transformers.value.every((t) => store.selectedTransformerIds.includes(t.assetId))
+})
+
+/**
+ * True if some (but not all) visible transformers are selected
+ * Used to show indeterminate state in the header checkbox
+ */
+const someVisibleSelected = computed(() => {
+  if (transformers.value.length === 0) return false
+  return transformers.value.some((t) => store.selectedTransformerIds.includes(t.assetId))
+})
+
+/**
+ * Toggles selection for all visible transformers
+ * - If all visible are selected, deselects only the visible ones
+ * - If not all visible are selected, selects all visible ones
+ * - Preserves selections of transformers not currently visible
+ */
+const toggleSelectAll = () => {
+  const visibleIds = transformers.value.map((t) => t.assetId)
+  const otherSelectedIds = store.selectedTransformerIds.filter((id) => !visibleIds.includes(id))
+
+  store.setSelectedTransformerIds(
+    allVisibleSelected.value ? otherSelectedIds : [...otherSelectedIds, ...visibleIds],
+  )
+}
+
+// ==================== Row Interaction Handlers ====================
+
+/**
+ * Handles row click to toggle transformer selection
+ */
 const onRowClick = (event: { data: Transformer }) => {
   store.toggleTransformerSelection(event.data.assetId)
 }
 
+/**
+ * Handles mouse enter on row to highlight corresponding chart line
+ * Only highlights if the transformer is currently selected in the chart
+ */
 const onRowMouseEnter = (event: { data: Transformer }) => {
+  if (!isRowSelected(event.data.assetId)) {
+    return
+  }
   store.setHoveredTransformer(event.data.assetId)
 }
 
+/**
+ * Handles mouse leave to clear chart highlighting
+ */
 const onRowMouseLeave = () => {
   store.setHoveredTransformer(null)
 }
 
+/**
+ * Checks if a transformer row is currently selected for chart display
+ */
 const isRowSelected = (assetId: number) => {
   return store.selectedTransformerIds.includes(assetId)
 }
@@ -97,10 +167,20 @@ const isRowSelected = (assetId: number) => {
         data-key="assetId"
         responsive-layout="scroll"
         class="p-datatable-sm"
-        :row-class="(data: Transformer) => (isRowSelected(data.assetId) ? 'selected-row' : '')"
         @row-click="onRowClick"
       >
         <Column header="" :style="{ width: '3rem' }">
+          <template #header>
+            <Checkbox
+              :model-value="allVisibleSelected"
+              :indeterminate="!allVisibleSelected && someVisibleSelected"
+              :binary="true"
+              @update:model-value="toggleSelectAll"
+              @click.stop
+              aria-label="Toggle all transformers in chart"
+              input-id="table-checkbox-select-all"
+            />
+          </template>
           <template #body="slotProps">
             <div @mouseenter="onRowMouseEnter(slotProps)" @mouseleave="onRowMouseLeave">
               <Checkbox
