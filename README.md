@@ -6,7 +6,7 @@ that ingests transformer asset data from JSON and visualises it in a table and l
 ### Tech stack
 
 - **Framework**: Vue 3 + TypeScript (Vite)
-- **UI library**: PrimeVue 4 (`DataTable`, `Chart`) ([PrimeVue DataTable](https://primevue.org/datatable/), [PrimeVue Chart](https://primevue.org/chart/))
+- **UI library**: PrimeVue4 ([PrimeVue](https://primevue.org/))
 - **State management**: Pinia
 - **Charts**: Chart.js
 - **Containerisation**: Docker + Nginx
@@ -23,7 +23,7 @@ that ingests transformer asset data from JSON and visualises it in a table and l
   - Health status dropdown filter for targeted filtering.
   - Sortable columns (Name, Region, Health).
   - Checkbox column for quick selection/deselection.
-  - Badge display for health status with visual indicators.
+  - Badge display for health status.
   - Row hover effects with smooth visual feedback.
   - Clicking a row toggles that transformer's inclusion in the chart.
   - Empty state message when no results match filters.
@@ -35,7 +35,6 @@ that ingests transformer asset data from JSON and visualises it in a table and l
   - Color-coded transformer selection checkboxes matching chart line colors.
   - Cross-component hover highlighting: hovering over table rows highlights corresponding chart lines.
   - Empty state message when no transformers are selected.
-  - Responsive aspect ratio adjusting for mobile and desktop viewports.
 
 - **UI/UX enhancements**
   - Dark mode support with theme-aware chart colors and text.
