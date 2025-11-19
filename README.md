@@ -1,48 +1,115 @@
-# camlin-task
+## Transformer Monitoring Dashboard
 
-This template should help get you started developing with Vue 3 in Vite.
+This project implements the take-home exercise: a small Vue 3 + TypeScript web application
+that ingests transformer asset data from JSON and visualises it in a table and line chart.
 
-## Recommended IDE Setup
+### Tech stack
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- **Framework**: Vue 3 + TypeScript (Vite)
+- **UI library**: PrimeVue 4 (`DataTable`, `Chart`) ([PrimeVue DataTable](https://primevue.org/datatable/), [PrimeVue Chart](https://primevue.org/chart/))
+- **State management**: Pinia
+- **Charts**: Chart.js
+- **Containerisation**: Docker + Nginx
 
-## Recommended Browser Setup
+### Features
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd) 
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+- **Data ingestion**
+  - Loads `src/sample-data/sampledata.json` at startup via a small data service.
+  - Normalises voltage readings (stored as strings in JSON) to numbers.
 
-## Type Support for `.vue` Imports in TS
+- **Transformer table**
+  - PrimeVue `DataTable` listing all transformers with **name**, **region**, and **health**.
+  - Global search box filtering by any field.
+  - Health status dropdown filter for targeted filtering.
+  - Sortable columns (Name, Region, Health).
+  - Checkbox column for quick selection/deselection.
+  - Badge display for health status with visual indicators.
+  - Row hover effects with smooth visual feedback.
+  - Clicking a row toggles that transformer's inclusion in the chart.
+  - Empty state message when no results match filters.
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+- **Voltage line chart**
+  - PrimeVue `Chart` (Chart.js line chart).
+  - X‑axis: time (last 10 timestamps), Y‑axis: voltage.
+  - One line per transformer with color-coded series.
+  - Color-coded transformer selection checkboxes matching chart line colors.
+  - Cross-component hover highlighting: hovering over table rows highlights corresponding chart lines.
+  - Empty state message when no transformers are selected.
+  - Responsive aspect ratio adjusting for mobile and desktop viewports.
 
-## Customize configuration
+- **UI/UX enhancements**
+  - Dark mode support with theme-aware chart colors and text.
+  - Smooth transitions and animations throughout the interface.
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+- **State management & persistence**
+  - Pinia store holds:
+    - Raw transformer data.
+    - Table search text and health filter.
+    - Selected transformer IDs for the chart.
+    - Hovered transformer ID for cross-component highlighting.
+  - State is persisted to `localStorage` so table filters and chart selections survive reloads.
+  - Uses the `storage` event so updates in one browser tab propagate to others.
 
-## Project Setup
+### Running the app locally
+
+Prerequisites:
+
+- Node.js 20+
+- npm
+
+Install dependencies:
 
 ```sh
 npm install
 ```
 
-### Compile and Hot-Reload for Development
+Start the dev server:
 
 ```sh
 npm run dev
 ```
 
-### Type-Check, Compile and Minify for Production
+Run type-check and production build:
 
 ```sh
 npm run build
 ```
 
-### Lint with [ESLint](https://eslint.org/)
+Run ESLint:
 
 ```sh
 npm run lint
 ```
+
+### Docker usage
+
+Build the Docker image:
+
+```sh
+docker build -t camlin-transformer-dashboard .
+```
+
+Run the container:
+
+```sh
+docker run -p 4173:80 camlin-transformer-dashboard
+```
+
+Or with `docker-compose`:
+
+```sh
+docker compose up --build
+```
+
+Then open `http://localhost:4173` in your browser.
+
+### Project structure (key files)
+
+- `src/sample-data/sampledata.json` – Transformer dataset (5 assets).
+- `src/types.ts` – Shared TypeScript types (`Transformer`, `VoltageReading`).
+- `src/services/transformerData.ts` – Data ingestion and normalisation.
+- `src/stores/transformerStore.ts` – Pinia store with persisted, cross‑tab state.
+- `src/components/TransformerTable.vue` – Table UI.
+- `src/components/TransformerChart.vue` – Line chart UI.
+- `src/App.vue` – Layout and cross‑tab storage synchronisation.
+- `Dockerfile` / `docker-compose.yml` – Containerised deployment.
